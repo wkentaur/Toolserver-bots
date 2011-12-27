@@ -202,7 +202,7 @@ def main():
 
             duplicates = findDuplicateImages(downloadedImage)
             if duplicates:
-                pywikibot.output(u'Found duplicate of %s image at %s' % muisUrl, duplicates.pop())
+                pywikibot.output(u'Found duplicate of %s image at %s' % ( muisUrl, duplicates.pop() ) )
             else:            
             
                 while True:
