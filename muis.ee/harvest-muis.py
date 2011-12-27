@@ -198,6 +198,7 @@ def main():
                                        ['y', 'N', 's'], 'N')
         if answer == 'y':
             aImage = getImage(muisUrl)
+            upFile = None
             downloadedImage = downloadPhoto(aImage.url)
 
             duplicates = findDuplicateImages(downloadedImage)
