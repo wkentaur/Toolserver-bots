@@ -65,7 +65,28 @@ class Image:
 
      
 # functions
+def downloadPhoto(photoUrl = ''):
+    '''
+    Download the photo and store it in a StrinIO.StringIO object.
 
+    TODO: Add exception handling
+
+    '''
+    imageFile=urllib.urlopen(photoUrl).read()
+    return StringIO.StringIO(imageFile)
+
+def findDuplicateImages(photo=None,
+                        site=pywikibot.getSite(u'commons', u'commons')):
+    ''' Takes the photo, calculates the SHA1 hash and asks the mediawiki api
+    for a list of duplicates.
+
+    TODO: Add exception handling, fix site thing
+
+    '''
+    hashObject = hashlib.sha1()
+    hashObject.update(photo.getvalue())
+    return site.getFilesFromAnHash(base64.b16encode(hashObject.digest()))
+    
 def getMuisUrls(inSite, inPageName):
     outUrls = []
     urlsPage = pywikibot.Page(inSite, inPageName)
@@ -163,6 +184,7 @@ def main():
 
     wikiSite = pywikibot.getSite(u'et', u'wikipedia')
     wikiPageName = u'Kasutaja:KrattBot/Muis.ee-st Commonsisse kopeerimiseks esitatud pildid'
+    galPageName = u'Kasutaja:KrattBot/Muis.ee-st Commonsisse kopeeritud pildid'  
     muisUrls = getMuisUrls(wikiSite, wikiPageName)
 
     uploadSite = pywikibot.getSite('commons', 'commons')
@@ -175,26 +197,32 @@ def main():
                                        ['y', 'N', 's'], 'N')
         if answer == 'y':
             aImage = getImage(muisUrl)
-            while True:
-                cat = pywikibot.input(
-                    u"Specify a category (or press enter to end adding categories)")
-                if not cat.strip(): break
-                aImage.categories.append( cat )
+            downloadedImage = downloadPhoto(photoUrl)
 
-            uploadBot = upload.UploadRobot(aImage.url,
+            duplicates = findDuplicateImages(downloadedImage)
+            if duplicates:
+                pywikibot.output(u'Found duplicate of %s image at %s' % muisUrl, duplicates.pop())
+            else:            
+            
+                while True:
+                    cat = pywikibot.input(
+                        u"Specify a category (or press enter to end adding categories)")
+                    if not cat.strip(): break
+                    aImage.categories.append( cat )
+
+                uploadBot = upload.UploadRobot(aImage.url,
                                     description=aImage.getFullDesc(),
                                     useFilename=aImage.name,
                                     keepFilename=True,
                                     verifyDescription=False,
                                     ignoreWarning=False, 
                                     targetSite=uploadSite)
-            upFile = uploadBot.run()
+                upFile = uploadBot.run()
             if upFile:
                 uploadedFiles.append(upFile)
         elif answer == 's':
             break
 
-    galPageName = u'Kasutaja:KrattBot/Muis.ee-st Commonsisse kopeeritud pildid'  
     if uploadedFiles:
         addToGallery(wikiSite, galPageName, uploadedFiles)
 
