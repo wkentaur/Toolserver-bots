@@ -14,6 +14,7 @@ import urllib
 import BeautifulSoup
 import upload
 import time
+import StringIO, hashlib, base64
 
 #cats for diffrent museums
 museumData = {
