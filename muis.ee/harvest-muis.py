@@ -1,4 +1,5 @@
-# -*- coding: iso8859-1 -*-
+#!/usr/bin/python
+# -*- coding: utf-8  -*-
 """
 Bot for uploading images from www.muis.ee to Commons
 
@@ -91,29 +92,29 @@ class Image:
 |institution = %s \n\
 ' % (self.artist, self.title, self.description, self.date, self.medium, self.dimensions, self.institution)
     if self.location:
-        outFDesc += '|location = %s \n' % self.location
+        outFDesc += u'|location = %s \n' % self.location
     if self.references:
-        outFDesc += '|references = %s \n' % self.references
+        outFDesc += u'|references = %s \n' % self.references
     if self.object_history:
-        outFDesc += '|object history = %s \n' % self.object_history
+        outFDesc += u'|object history = %s \n' % self.object_history
     if self.credit_line:
-        outFDesc += '|credit line = %s \n' % self.credit_line
+        outFDesc += u'|credit line = %s \n' % self.credit_line
     if self.inscriptions:
-        outFDesc += '|inscriptions = %s \n' % self.inscriptions
+        outFDesc += u'|inscriptions = %s \n' % self.inscriptions
     if self.notes:
-        outFDesc += '|notes = %s \n' % self.notes
-    outFDesc += '|accession number = %s \n' % self.accession_number
-    outFDesc += '|source = %s \n' % self.source
-    outFDesc += '|permission = %s \n' % self.permission
-    outFDesc += '|other_versions = %s \n' % self.other_versions
-    outFDesc += '}} \n\
+        outFDesc += u'|notes = %s \n' % self.notes
+    outFDesc += u'|accession number = %s \n' % self.accession_number
+    outFDesc += u'|source = %s \n' % self.source
+    outFDesc += u'|permission = %s \n' % self.permission
+    outFDesc += u'|other_versions = %s \n' % self.other_versions
+    outFDesc += u'}} \n\
 \n\
 =={{int:license-header}}== \n\
 %s \n\n' % self.license
 
 
     for aCat in self.categories:
-        outFDesc += "[[Category:%s]]\n" % (aCat,)
+        outFDesc += u"[[Category:%s]]\n" % (aCat,)
     
     return outFDesc
 
@@ -129,6 +130,31 @@ def downloadPhoto(photoUrl = ''):
     imageFile=urllib.urlopen(photoUrl).read()
     return StringIO.StringIO(imageFile)
 
+def cleanUpTitle(title):
+    ''' Clean up the title of a potential mediawiki page. Otherwise the title of
+    the page might not be allowed by the software.
+
+    '''
+    title = title.strip()
+    title = re.sub(u"[<{\\[]", u"(", title)
+    title = re.sub(u"[>}\\]]", u")", title)
+    title = re.sub(u"[ _]?\\(!\\)", u"", title)
+    title = re.sub(u",:[ _]", u", ", title)
+    title = re.sub(u"[;:][ _]", u", ", title)
+    title = re.sub(u"[\t\n ]+", u" ", title)
+    title = re.sub(u"[\r\n ]+", u" ", title)
+    title = re.sub(u"[\n]+", u"", title)
+    title = re.sub(u"[?!]([.\"]|$)", u"\\1", title)
+    title = re.sub(u"[&#%?!]", u"^", title)
+    title = re.sub(u"[;]", u",", title)
+    title = re.sub(u"[/+\\\\:]", u"-", title)
+    title = re.sub(u"--+", u"-", title)
+    title = re.sub(u",,+", u",", title)
+    title = re.sub(u"[-,^]([.]|$)", u"\\1", title)
+    title = title.replace(u" ", u"_")
+    
+    return title    
+    
 def findDuplicateImages(photo=None,
                         site=pywikibot.getSite(u'commons', u'commons')):
     ''' Takes the photo, calculates the SHA1 hash and asks the mediawiki api
@@ -209,7 +235,6 @@ def getImage(url):
         #Kuressaare linnus, vaade põhjast (SM F 3761:473 F); Saaremaa Muuseum; Faili nimi:smf_3761_473.jpg
         (capPart1, museumName, capPart3) = captionTxt.split(';')
         museumName = museumName.strip()
-        museumName = museumName.encode('utf_8')
         matchItemRef = re.search("\((.+?)\)", capPart1)
         if (matchItemRef and matchItemRef.group(1)): 
             outImage.source = u'[%s %s, %s]' % ( url, museumName, matchItemRef.group(1) )
@@ -217,6 +242,7 @@ def getImage(url):
         matchName = re.search("(.+?)\(.+Faili nimi:(.+?)$", captionTxt)
         if (matchName and matchName.group(1)): 
             outImage.name = matchName.group(1).strip() + ', ' + matchName.group(2)
+            outImage.name = cleanUpTitle( outImage.name )
         #print outImage.url, "\n", captionTxt, "\n", outImage.name, "\n", outImage.source, "\n"
 
         mainTable = soup.find("table", {"class" : "data highlighted"})
@@ -232,12 +258,15 @@ def getImage(url):
         outImage.license = '{{PD-old}}'
         
         ##add categories
+        museumName = museumName.encode('utf_8')
         if museumData.get(museumName) and museumData.get(museumName).get('enName'):
-            outImage.institution = '{{Institution:' + museumData.get(museumName).get('enName') + '}}'
-            museumCat = u'Images from the ' + museumData.get(museumName).get('enName')
+            museumEnName = museumData.get(museumName).get('enName')
+            #museumEnName = museumEnName.encode('utf_8')
+            outImage.institution = u'{{Institution:' + museumEnName + u'}}'
+            museumCat = u'Images from the ' + museumEnName
             outImage.categories.append( museumCat )
         else:
-            print "Museum enName not found in %s! \n" % url
+            print "Museum enName not found for %s! \n" % url
             return None
 
             
@@ -299,6 +328,7 @@ def main():
                                     verifyDescription=False,
                                     ignoreWarning=False, 
                                     targetSite=uploadSite)
+                    #print aImage.getFullDesc()
                     upFile = uploadBot.run()
                     if upFile:
                         uploadedFiles.append(upFile)
