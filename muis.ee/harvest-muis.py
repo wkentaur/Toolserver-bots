@@ -16,13 +16,40 @@ import upload
 import time
 import StringIO, hashlib, base64
 
-#cats for diffrent museums
+#en names for diffrent museums
 museumData = {
-    ('Saaremaa Muuseum') : {
-    'cat' : u'Images from the Saaremaa Museum'
+    ('Dr.Fr.R.Kreutzwaldi Memoriaalmuuseum') : {
+    'enName' : u'Kreutzwald Memorial Museum'
+    },
+    ('Eesti Kunstimuuseum') : {
+    'enName' : u'Art Museum of Estonia'
     },
     ('Eesti Rahva Muuseum') : {
-    'cat' : u'Images from the Estonian National Museum'
+    'enName' : u'Estonian National Museum'
+    },
+    ('Järvamaa Muuseum') : {
+    'enName' : u'Järvamaa Museum'
+    },
+    ('Palamuse O.Lutsu Kihelkonnakoolimuuseum') : {
+    'enName' : u'Palamuse Museum'
+    },
+    ('Põlva Talurahvamuuseum') : {
+    'enName' : u'Põlva Peasant Museum'
+    },
+    ('Saaremaa Muuseum') : {
+    'enName' : u'Saaremaa Museum'
+    },
+    ('SA Virumaa Muuseumid') : {
+    'enName' : u'Virumaa Museums'
+    },
+    ('Tartu Linnamuuseum') : {
+    'enName' : u'Tartu City Museum'
+    },
+    ('Tartumaa Muuseum') : {
+    'enName' : u'Tartu County Museum'
+    },
+    ('Valga Muuseum') : {
+    'enName' : u'Valga Museum'
     }
 }
 
@@ -32,32 +59,58 @@ class Image:
 #Constructor with default arguments
    def __init__(self, url = u''):
      self.url = url
-     self.name = u''
+     self.artist = u''
+     self.title = u''
      self.description = u''
      self.date = u''
+     self.medium = u''
+     self.dimensions = u''
+     self.institution = u''
+     self.location = u''
+     self.references = u''
+     self.object_history = u''
+     self.credit_line = u''
+     self.inscriptions = u''
+     self.notes = u''
+     self.accession_number = u''
      self.source = u''
-     self.author = u''
      self.permission = u''
      self.other_versions = u''
-     self.other_fields = u''
      self.license = u''
      self.categories = []
     
    def getFullDesc(self):
     outFDesc = u'=={{int:filedesc}}==\n\
-{{Information \n\
-|description=%s \n\
-|date=%s \n\
-|source=%s \n\
-|author=%s \n\
-|permission=%s \n\
-|other_versions=%s \n\
-|other_fields=%s \n\
-}} \n\
+{{Artwork \n\
+|artist = %s \n\
+|title = %s \n\
+|description = %s \n\
+|date = %s \n\
+|medium = %s \n\
+|dimensions = %s \n\
+|institution = %s \n\
+' % (self.artist, self.title, self.description, self.date, self.medium, self.dimensions, self.institution)
+    if self.location:
+        outFDesc += '|location = %s \n' % self.location
+    if self.references:
+        outFDesc += '|references = %s \n' % self.references
+    if self.object_history:
+        outFDesc += '|object_history = %s \n' % self.object_history
+    if self.credit_line:
+        outFDesc += '|credit_line = %s \n' % self.credit_line
+    if self.inscriptions:
+        outFDesc += '|inscriptions = %s \n' % self.inscriptions
+    if self.notes:
+        outFDesc += '|notes = %s \n' % self.notes
+    outFDesc += '|accession_number = %s \n' % self.accession_number
+    outFDesc += '|source = %s \n' % self.source
+    outFDesc += '|permission = %s \n' % self.permission
+    outFDesc += '|other_versions = %s \n' % self.other_versions
+    outFDesc += '}} \n\
 \n\
 =={{int:license-header}}== \n\
-%s \n\n\
-' % (self.description, self.date, self.source, self.author, self.permission, self.other_versions, self.other_fields, self.license)
+%s \n\n' % self.license
+
 
     for aCat in self.categories:
         outFDesc += "[[Category:%s]]\n" % (aCat,)
@@ -97,26 +150,48 @@ def getMuisUrls(inSite, inPageName):
     return outUrls
 
 
-def getWikiTable(inTable):
+def getWikiTable(inTable, inImage):
+    wikiTable = u''
+
+    if inTable:
         wikiTable = "<table>\n"
         rows = inTable.findAll('tr')
         for row in rows:
-            wikiTable += "<tr>\n"
-            wikiTable += "<td>\n"
             cells = []
+            readNumber = False
+            readTitle = False
+            readMuseumName = False
             colsH = row.findAll('th')
             for col in colsH:
                 colText = " ".join(col.findAll(text=True))
-                cells.append( colText )
+                if colText == 'Number':
+                    readNumber = True
+                elif colText == 'Nimetus':
+                    readTitle = True
+                elif colText == '' and col.findAll('img'):
+                    readMuseumName = True
+                else:
+                    cells.append( colText )
             cols = row.findAll('td')
             for col in cols:
                 colText = " ".join(col.findAll(text=True))
-                cells.append( colText )
-            wikiTable += " </td><td> ".join(cells)
-            wikiTable += "</td></tr>\n"
+                if readNumber:
+                    inImage.accession_number = colText
+                elif readTitle:
+                    inImage.title = colText
+                elif readMuseumName:
+                    #do nothing
+                    doNothing = ''
+                else:
+                    cells.append( colText )
+            if cells:
+                wikiTable += "<tr>\n"
+                wikiTable += "<td>\n"            
+                wikiTable += " </td><td> ".join(cells)
+                wikiTable += "</td></tr>\n"
         wikiTable += "</table>\n"
         
-        return wikiTable
+    return wikiTable
 
 def getImage(url):
     uo = pywikibot.MyURLopener
@@ -144,22 +219,25 @@ def getImage(url):
         #print outImage.url, "\n", captionTxt, "\n", outImage.name, "\n", outImage.source, "\n"
 
         mainTable = soup.find("table", {"class" : "data highlighted"})
-        outDesc = getWikiTable(mainTable)
+        outDesc = getWikiTable(mainTable, outImage)
         
         mainTable = soup.find("table", {"class" : "data"})
-        outDesc += getWikiTable(mainTable)
+        outDesc += getWikiTable(mainTable, outImage)
 
         mainTable = soup.find("table", {"class" : "data full_length"})
-        outDesc += getWikiTable(mainTable)
+        outDesc += getWikiTable(mainTable, outImage)
         
         outImage.description = '{{et|1=' + outDesc + '}}'
         outImage.license = '{{PD-old}}'
         
         ##add categories
-        if museumData.get(museumName).get('cat'):
-            outImage.categories.append( museumData.get(museumName).get('cat') )
+        if museumData.get(museumName).get('enName'):
+            outImage.institution = '{{Institution:' + museumData.get(museumName).get('enName') + '}}'
+            museumCat = u'Images from the ' + museumData.get(museumName).get('enName')
+            outImage.categories.append( museumCat )
         else:
-            print "Category not found! \n"
+            print "Museum enName not found in %s! \n" % url
+            return None
 
             
     return outImage
@@ -195,33 +273,34 @@ def main():
     for muisUrl in muisUrls:
         answer = pywikibot.inputChoice(u'Include image %s?'
                                        % muisUrl, ['yes', 'no', 'stop'],
-                                       ['y', 'N', 's'], 'N')
+                                       ['Y', 'n', 's'], 'Y')
         if answer == 'y':
             aImage = getImage(muisUrl)
-            upFile = None
-            downloadedImage = downloadPhoto(aImage.url)
+            if aImage:
+                upFile = None
+                downloadedImage = downloadPhoto(aImage.url)
 
-            duplicates = findDuplicateImages(downloadedImage)
-            if duplicates:
-                pywikibot.output(u'Found duplicate of %s image at %s' % ( muisUrl, duplicates.pop() ) )
-            else:            
+                duplicates = findDuplicateImages(downloadedImage)
+                if duplicates:
+                    pywikibot.output(u'Found duplicate of %s image at %s' % ( muisUrl, duplicates.pop() ) )
+                else:            
             
-                while True:
-                    cat = pywikibot.input(
-                        u"Specify a category (or press enter to end adding categories)")
-                    if not cat.strip(): break
-                    aImage.categories.append( cat )
+                    while True:
+                        cat = pywikibot.input(
+                            u"Specify a category (or press enter to end adding categories)")
+                        if not cat.strip(): break
+                        aImage.categories.append( cat )
 
-                uploadBot = upload.UploadRobot(aImage.url,
+                    uploadBot = upload.UploadRobot(aImage.url,
                                     description=aImage.getFullDesc(),
                                     useFilename=aImage.name,
                                     keepFilename=True,
                                     verifyDescription=False,
                                     ignoreWarning=False, 
                                     targetSite=uploadSite)
-                upFile = uploadBot.run()
-            if upFile:
-                uploadedFiles.append(upFile)
+                    upFile = uploadBot.run()
+                    if upFile:
+                        uploadedFiles.append(upFile)
         elif answer == 's':
             break
 
