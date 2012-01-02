@@ -212,7 +212,7 @@ def getImage(url):
         museumName = museumName.encode('utf_8')
         matchItemRef = re.search("\((.+?)\)", capPart1)
         if (matchItemRef and matchItemRef.group(1)): 
-            outImage.source = '[' +  url + ' ' + museumName + ', ' + matchItemRef.group(1) + ']'
+            outImage.source = u'[' +  url + ' ' + museumName + ', ' + matchItemRef.group(1) + ']'
             outImage.source.strip()
         matchName = re.search("(.+?)\(.+Faili nimi:(.+?)$", captionTxt)
         if (matchName and matchName.group(1)): 
