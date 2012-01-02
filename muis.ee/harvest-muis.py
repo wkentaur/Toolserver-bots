@@ -27,14 +27,14 @@ museumData = {
     ('Eesti Rahva Muuseum') : {
     'enName' : u'Estonian National Museum'
     },
-    ('Järvamaa Muuseum') : {
-    'enName' : u'Järvamaa Museum'
+    ('JÃ¤rvamaa Muuseum') : {
+    'enName' : u'JÃ¤rvamaa Museum'
     },
     ('Palamuse O.Lutsu Kihelkonnakoolimuuseum') : {
     'enName' : u'Palamuse Museum'
     },
-    ('Põlva Talurahvamuuseum') : {
-    'enName' : u'Põlva Peasant Museum'
+    ('PÃµlva Talurahvamuuseum') : {
+    'enName' : u'PÃµlva Peasant Museum'
     },
     ('Saaremaa Muuseum') : {
     'enName' : u'Saaremaa Museum'
@@ -95,14 +95,14 @@ class Image:
     if self.references:
         outFDesc += '|references = %s \n' % self.references
     if self.object_history:
-        outFDesc += '|object_history = %s \n' % self.object_history
+        outFDesc += '|object history = %s \n' % self.object_history
     if self.credit_line:
-        outFDesc += '|credit_line = %s \n' % self.credit_line
+        outFDesc += '|credit line = %s \n' % self.credit_line
     if self.inscriptions:
         outFDesc += '|inscriptions = %s \n' % self.inscriptions
     if self.notes:
         outFDesc += '|notes = %s \n' % self.notes
-    outFDesc += '|accession_number = %s \n' % self.accession_number
+    outFDesc += '|accession number = %s \n' % self.accession_number
     outFDesc += '|source = %s \n' % self.source
     outFDesc += '|permission = %s \n' % self.permission
     outFDesc += '|other_versions = %s \n' % self.other_versions
@@ -209,6 +209,7 @@ def getImage(url):
         #Kuressaare linnus, vaade põhjast (SM F 3761:473 F); Saaremaa Muuseum; Faili nimi:smf_3761_473.jpg
         (capPart1, museumName, capPart3) = captionTxt.split(';')
         museumName = museumName.strip()
+        museumName = museumName.encode('utf_8')
         matchItemRef = re.search("\((.+?)\)", capPart1)
         if (matchItemRef and matchItemRef.group(1)): 
             outImage.source = '[' +  url + ' ' + museumName + ', ' + matchItemRef.group(1) + ']'
@@ -231,7 +232,7 @@ def getImage(url):
         outImage.license = '{{PD-old}}'
         
         ##add categories
-        if museumData.get(museumName).get('enName'):
+        if museumData.get(museumName) and museumData.get(museumName).get('enName'):
             outImage.institution = '{{Institution:' + museumData.get(museumName).get('enName') + '}}'
             museumCat = u'Images from the ' + museumData.get(museumName).get('enName')
             outImage.categories.append( museumCat )
@@ -255,7 +256,7 @@ def addToGallery(inSite, inPageName, inFiles):
     for fileName in inFiles:
         addTxt += fileName + ' | ' + fileName + "\n"
     addTxt += "</gallery>\n\n"
-    commentText = u'Üles laaditud %d pilti' % len(inFiles)
+    commentText = u'Ãœles laaditud %d pilti' % len(inFiles)
     
     galleryPage.put(pageTxt + "\n" + addTxt, comment = commentText)
 
