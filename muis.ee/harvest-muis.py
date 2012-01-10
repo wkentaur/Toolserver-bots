@@ -255,7 +255,7 @@ def getImage(url):
         #print outImage.url, "\n", captionTxt, "\n", outImage.name, "\n", outImage.source, "\n"
 
         mainTable = soup.find("table", {"class" : "data highlighted"})
-        outDesc += u"<table>\n"
+        outDesc = u"<table>\n"
         outDesc += getWikiTable(mainTable, outImage)
         
         mainTable = soup.find("table", {"class" : "data"})
