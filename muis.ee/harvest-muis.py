@@ -180,13 +180,14 @@ def getWikiTable(inTable, inImage):
     wikiTable = u''
 
     if inTable:
-        wikiTable = "<table>\n"
         rows = inTable.findAll('tr')
         for row in rows:
             cells = []
             readNumber = False
             readTitle = False
             readMuseumName = False
+            readAuthor = False
+            readDate = False
             colsH = row.findAll('th')
             for col in colsH:
                 colText = " ".join(col.findAll(text=True))
@@ -194,6 +195,10 @@ def getWikiTable(inTable, inImage):
                     readNumber = True
                 elif colText == 'Nimetus':
                     readTitle = True
+                elif colText == 'Autor':
+                    readAuthor = True
+                elif colText == 'Dateering':
+                    readDate = True
                 elif colText == '' and col.findAll('img'):
                     readMuseumName = True
                 else:
@@ -205,6 +210,10 @@ def getWikiTable(inTable, inImage):
                     inImage.accession_number = colText
                 elif readTitle:
                     inImage.title = colText
+                elif readAuthor:
+                    inImage.artist = colText
+                elif readDate:
+                    inImage.date = colText
                 elif readMuseumName:
                     #do nothing
                     doNothing = ''
@@ -214,11 +223,11 @@ def getWikiTable(inTable, inImage):
                 wikiTable += "<tr>\n"
                 wikiTable += "<td>\n"            
                 wikiTable += " </td><td> ".join(cells)
-                wikiTable += "</td></tr>\n"
-        wikiTable += "</table>\n"
+                wikiTable += "</td>\n</tr>\n"
         
     return wikiTable
-
+    
+    
 def getImage(url):
     uo = pywikibot.MyURLopener
     file = uo.open(url)
@@ -235,24 +244,26 @@ def getImage(url):
         #Kuressaare linnus, vaade põhjast (SM F 3761:473 F); Saaremaa Muuseum; Faili nimi:smf_3761_473.jpg
         (capPart1, museumName, capPart3) = captionTxt.split(';')
         museumName = museumName.strip()
-        matchItemRef = re.search("\((.+?)\)", capPart1)
-        if (matchItemRef and matchItemRef.group(1)): 
-            outImage.source = u'[%s %s, %s]' % ( url, museumName, matchItemRef.group(1) )
+        matchItemRef = re.search("(.+)\((.+?)\)$", capPart1)
+        if (matchItemRef and matchItemRef.group(2)): 
+            outImage.source = u'[%s %s, %s]' % ( url, museumName, matchItemRef.group(2) )
             outImage.source.strip()
-        matchName = re.search("(.+?)\(.+Faili nimi:(.+?)$", captionTxt)
+        matchName = re.search("Faili nimi:(.+?)$", captionTxt)
         if (matchName and matchName.group(1)): 
-            outImage.name = matchName.group(1).strip() + ', ' + matchName.group(2)
+            outImage.name = matchItemRef.group(1).strip() + ', ' + matchName.group(1).strip()
             outImage.name = cleanUpTitle( outImage.name )
         #print outImage.url, "\n", captionTxt, "\n", outImage.name, "\n", outImage.source, "\n"
 
         mainTable = soup.find("table", {"class" : "data highlighted"})
-        outDesc = getWikiTable(mainTable, outImage)
+        outDesc += u"<table>\n"
+        outDesc += getWikiTable(mainTable, outImage)
         
         mainTable = soup.find("table", {"class" : "data"})
         outDesc += getWikiTable(mainTable, outImage)
 
         mainTable = soup.find("table", {"class" : "data full_length"})
         outDesc += getWikiTable(mainTable, outImage)
+        outDesc += u"</table>\n"
         
         outImage.description = '{{et|1=' + outDesc + '}}'
         outImage.license = '{{PD-old}}'
