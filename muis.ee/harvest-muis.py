@@ -43,6 +43,9 @@ museumData = {
     ('SA Virumaa Muuseumid') : {
     'enName' : u'Virumaa Museums'
     },
+    ('Tallinna Linnamuuseum') : {
+    'enName' : u'Tallinn City Museum'
+    },
     ('Tartu Linnamuuseum') : {
     'enName' : u'Tartu City Museum'
     },
