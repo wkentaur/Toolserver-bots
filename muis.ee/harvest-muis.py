@@ -6,6 +6,9 @@ Bot for uploading images from www.muis.ee to Commons
 Usage:
 python harvest-muis.py
 
+TODO:
+* upload 2+ pictures from one page: http://www.muis.ee/portaal/museaalview/1388822
+
 """
 
 import re, sys, os
@@ -45,6 +48,9 @@ museumData = {
     },
     ('Tallinna Linnamuuseum') : {
     'enName' : u'Tallinn City Museum'
+    },
+    ('Tartu Kunstimuuseum') : {
+    'enName' : u'Tartu Art Museum'
     },
     ('Tartu Linnamuuseum') : {
     'enName' : u'Tartu City Museum'
@@ -212,9 +218,15 @@ def getWikiTable(inTable, inImage):
                 if readNumber:
                     inImage.accession_number = colText
                 elif readTitle:
-                    inImage.title = colText
+                    inImage.title = u'{{et| ' + colText + u' }}'
                 elif readAuthor:
-                    inImage.artist = colText
+                    author = colText.strip()
+                    #reverse name parts ,
+                    matchNameParts = re.search("(.+?),\s+(.+)$", author)
+                    if matchNameParts and matchNameParts.group(2):
+                        author = matchNameParts.group(2) + u' ' + matchNameParts.group(1)
+                    #{{subst:#ifexist:Creator:Johann Köler|{{Creator:Johann Köler}}|Johann Köler}}
+                    inImage.artist = u'{{subst:#ifexist:Creator:' + author + u'|{{Creator:' + author + u'}}|' + author + u'}}'
                 elif readDate:
                     inImage.date = colText
                 elif readMuseumName:
