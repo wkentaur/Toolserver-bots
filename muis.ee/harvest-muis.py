@@ -263,11 +263,6 @@ def getImage(url):
         if (matchItemRef and matchItemRef.group(2)): 
             outImage.source = u'[%s %s, %s]' % ( url, museumName, matchItemRef.group(2) )
             outImage.source.strip()
-        matchName = re.search("Faili nimi:(.+?)$", captionTxt)
-        if (matchName and matchName.group(1)): 
-            outImage.name = matchItemRef.group(1).strip() + ', ' + matchName.group(1).strip()
-            outImage.name = cleanUpTitle( outImage.name )
-        #print outImage.url, "\n", captionTxt, "\n", outImage.name, "\n", outImage.source, "\n"
 
         mainTable = soup.find("table", {"class" : "data highlighted"})
         outDesc = u"<table>\n"
@@ -279,6 +274,9 @@ def getImage(url):
         mainTable = soup.find("table", {"class" : "data full_length"})
         outDesc += getWikiTable(mainTable, outImage)
         outDesc += u"</table>\n"
+
+        outImage.name = matchItemRef.group(1).strip() + u', ' + outImage.accession_number + u'.jpg'
+        outImage.name = cleanUpTitle( outImage.name )
         
         outImage.description = '{{et|1=' + outDesc + '}}'
         outImage.license = '{{PD-old}}'
@@ -287,12 +285,11 @@ def getImage(url):
         museumName = museumName.encode('utf_8')
         if museumData.get(museumName) and museumData.get(museumName).get('enName'):
             museumEnName = museumData.get(museumName).get('enName')
-            #museumEnName = museumEnName.encode('utf_8')
             outImage.institution = u'{{Institution:' + museumEnName + u'}}'
             museumCat = u'Images from the ' + museumEnName
             outImage.categories.append( museumCat )
         else:
-            print "Museum enName not found for %s! \n" % url
+            print "Museum enName not found for %s ! \n" % url
             return None
 
             
