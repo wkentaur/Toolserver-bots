@@ -31,6 +31,12 @@ museumData = {
     ('Eesti Rahva Muuseum') : {
     'enName' : u'Estonian National Museum'
     },
+    ('Eesti P�llumajandusmuuseum') : {
+    'enName' : u'Estonian Agricultural Museum'
+    },
+    ('Eesti Spordimuuseum') : {
+    'enName' : u'Estonian Sports Museum'
+    },
     ('Järvamaa Muuseum') : {
     'enName' : u'Järvamaa Museum'
     },
