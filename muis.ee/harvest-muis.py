@@ -266,7 +266,7 @@ def getImage(url):
         #Kuressaare linnus, vaade põhjast (SM F 3761:473 F); Saaremaa Muuseum; Faili nimi:smf_3761_473.jpg
         (capPart1, museumName, capPart3) = captionTxt.split(';')
         museumName = museumName.strip()
-        matchItemRef = re.search("(.+)\((.+?)\)$", capPart1)
+        matchItemRef = re.search("^(.+)\((.+?)\)$", capPart1)
         if (matchItemRef and matchItemRef.group(2)): 
             outImage.source = u'[%s %s, %s]' % ( url, museumName, matchItemRef.group(2) )
             outImage.source.strip()
