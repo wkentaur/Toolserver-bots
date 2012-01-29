@@ -160,9 +160,9 @@ def addCoords(sourceWiki, lang, article, lat, lon, region, type, dim):
             logging.info('Adding coords to: %s', article)
             comment = u'lisan artikli koordinaadid %s.wikist' % (sourceWiki)
             wikipedia.showDiff(text, newtext)
-            #modPage = wikipedia.input(u'Modify page: %s ([y]/n) ?' % (article) )
-            #if (modPage.lower == 'y' or modPage == ''):
-            page.put(newtext, comment)
+            modPage = wikipedia.input(u'Modify page: %s ([y]/n) ?' % (article) )
+            if (modPage.lower == 'y' or modPage == ''):
+                page.put(newtext, comment)
             return True
         else:
             logging.info('Nothing to change: %s', article)
