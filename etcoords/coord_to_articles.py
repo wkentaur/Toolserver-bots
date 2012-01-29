@@ -186,6 +186,7 @@ def main():
         sys.exit("Source wiki not set at command line with -sourcewiki:XX")
     
     targetWiki = "et"
+    globe = "Earth"
     coordTable = "u_dispenser_p.coord_" + sourceWiki + "wiki"
     (connSource, cursorSource) = connectWikiDatabase(sourceWiki)
     (connTarget, cursorTarget) = connectWikiDatabase(targetWiki)
@@ -194,10 +195,10 @@ def main():
     JOIN """ + coordTable + """ ON gc_from = page_id 
     JOIN langlinks ON ll_from = page_id 
     WHERE page_namespace=0 
-    AND gc_globe = 'Earth'
+    AND (gc_globe = '' OR gc_globe = %s)
     AND gc_primary = 1 
     AND ll_lang = %s"""
-    cursorSource.execute(query, (targetWiki,))
+    cursorSource.execute(query, (globe, targetWiki))
     while True:
         try:
             row = cursorSource.fetchone()
