@@ -23,7 +23,7 @@ from time import strftime
 # wikipedia category namespace
 WP_CATEGORY_NS = 14
 # output debug messages
-DEBUG = True
+DEBUG = False
 
 def connectWikiDatabase(lang):
     '''
