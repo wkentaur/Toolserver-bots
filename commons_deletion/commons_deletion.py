@@ -65,7 +65,12 @@ def getImages(cursor, imgCat):
         WHERE etwiki_p.imagelinks.il_to = commonswiki_p.image.img_name
         AND commonswiki_p.image.img_name = commonswiki_p.page.page_title
         AND commonswiki_p.categorylinks.cl_from = commonswiki_p.page.page_id
-        AND commonswiki_p.categorylinks.cl_to = %s"""
+        AND commonswiki_p.categorylinks.cl_to = %s
+        AND NOT EXISTS(
+            SELECT  1
+            FROM etwiki_p.image
+            WHERE etwiki_p.image.img_name = etwiki_p.imagelinks.il_to
+        )"""
     cursor.execute(query, (imgCat, ))
     if DEBUG:
         print cursor._executed        
