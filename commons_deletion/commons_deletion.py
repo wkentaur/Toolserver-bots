@@ -118,7 +118,7 @@ def main():
     localtime = strftime("%Y-%m-%d %H:%M:%S")
     addTxt = u"Commonsis kustutamisele esitatud pildid, mis on kasutusel et.wikis, " + localtime + u" seisuga.\n\n"
     outText = addTxt + outText + u"\n[[Kategooria:Kustutamiseks esitatud pildid]]\n"
-    print outText
+    #print outText
     commentText = u'Kokku %d pilti' % totalImageCount
     
     galleryPage.put(outText, comment = commentText)    
