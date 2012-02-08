@@ -99,6 +99,7 @@ def main():
     imgCats.append('Other_speedy_deletions')
     imgCats.append('Copyright_violations')
     imgCats.append('Items_with_disputed_copyright_information')
+    imgCats.append('Pending_fair_use_deletes')
 
     
     totalImageCount = 0
