@@ -100,6 +100,7 @@ def main():
     imgCats.append('Copyright_violations')
     imgCats.append('Items_with_disputed_copyright_information')
     imgCats.append('Pending_fair_use_deletes')
+    imgCats.append('Possibly_out_of_scope')
 
     
     totalImageCount = 0
