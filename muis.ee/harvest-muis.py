@@ -37,6 +37,9 @@ museumData = {
     ('Eesti Spordimuuseum') : {
     'enName' : u'Estonian Sports Museum'
     },
+    ('Eesti Sõjamuuseum - Kindral Laidoneri Muuseum') : {
+    'enName' : u'Estonian War Museum'
+    },
     ('Järvamaa Muuseum') : {
     'enName' : u'Järvamaa Museum'
     },
