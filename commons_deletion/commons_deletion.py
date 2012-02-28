@@ -70,7 +70,8 @@ def getImages(cursor, imgCat):
             SELECT  1
             FROM etwiki_p.image
             WHERE etwiki_p.image.img_name = etwiki_p.imagelinks.il_to
-        )"""
+        )
+        ORDER BY etwiki_p.imagelinks.il_to"""
     cursor.execute(query, (imgCat, ))
     if DEBUG:
         print cursor._executed        
@@ -100,6 +101,7 @@ def main():
     imgCats.append('Copyright_violations')
     imgCats.append('Items_with_disputed_copyright_information')
     imgCats.append('Pending_fair_use_deletes')
+    imgCats.extend( getSubCats(cursor, 'Pending_fair_use_deletes') )
     imgCats.append('Possibly_out_of_scope')
 
     
