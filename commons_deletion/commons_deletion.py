@@ -2,6 +2,7 @@
 # -*- coding: utf-8  -*-
 #$ -l h_rt=0:40:00
 #$ -l s_rt=0:35:00
+#$ -l virtual_free=100M
 #$ -j y
 #$ -o $HOME/commons_deletion.out
 
