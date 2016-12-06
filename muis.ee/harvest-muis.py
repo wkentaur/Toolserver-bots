@@ -12,18 +12,31 @@ TODO:
 """
 
 import re, sys, os
-sys.path.append("/home/kentaur/py/pywikipedia")
-import wikipedia as pywikibot
+sys.path.append("/home/rk/py/pywikibot/core")
+import pywikibot
 import urllib
 import BeautifulSoup
-import upload
+from scripts import upload
 import time
 import StringIO, hashlib, base64
+from pywikibot.tools import PY2
 
+if not PY2:
+    import urllib
+    from urllib.request import URLopener
+
+    basestring = (str,)
+else:
+    from urllib import URLopener
+    
+    
 #en names for diffrent museums
 museumData = {
     ('Dr.Fr.R.Kreutzwaldi Memoriaalmuuseum') : {
     'enName' : u'Kreutzwald Memorial Museum'
+    },
+    ('Eesti Ajaloomuuseum') : {
+    'enName' : u'Estonian History Museum'
     },
     ('Eesti Kunstimuuseum') : {
     'enName' : u'Art Museum of Estonia'
@@ -40,6 +53,9 @@ museumData = {
     ('Eesti Sõjamuuseum - Kindral Laidoneri Muuseum') : {
     'enName' : u'Estonian War Museum'
     },
+    ('Eesti Vabaõhumuuseum SA') : {
+    'enName' : u'Estonian Open Air Museum'
+    },    
     ('Järvamaa Muuseum') : {
     'enName' : u'Järvamaa Museum'
     },
@@ -69,7 +85,10 @@ museumData = {
     },
     ('Valga Muuseum') : {
     'enName' : u'Valga Museum'
-    }
+    },
+    ('Virumaa Muuseumid SA') : {
+    'enName' : u'Virumaa Museums'
+    },
 }
 
 # classes
@@ -190,7 +209,7 @@ def getMuisUrls(inSite, inPageName):
     outUrls = []
     urlsPage = pywikibot.Page(inSite, inPageName)
     pageTxt = urlsPage.get()
-    outUrls = re.findall(r"http://www.muis.ee/portaal/museaalview/\d+", pageTxt)
+    outUrls = re.findall(r"http://muis.ee/museaalview/\d+", pageTxt)
     
     return outUrls
 
@@ -235,7 +254,7 @@ def getWikiTable(inTable, inImage):
                     matchNameParts = re.search("(.+?),\s+(.+)$", author)
                     if matchNameParts and matchNameParts.group(2):
                         author = matchNameParts.group(2) + u' ' + matchNameParts.group(1)
-                    #{{subst:#ifexist:Creator:Johann K�ler|{{Creator:Johann K�ler}}|Johann K�ler}}
+                    #{{subst:#ifexist:Creator:Johann Köler|{{Creator:Johann Köler}}|Johann Köler}}
                     inImage.artist = u'{{subst:#ifexist:Creator:' + author + u'|{{Creator:' + author + u'}}|' + author + u'}}'
                 elif readDate:
                     inImage.date = colText
@@ -254,7 +273,10 @@ def getWikiTable(inTable, inImage):
     
     
 def getImage(url):
-    uo = pywikibot.MyURLopener
+    MAX_TITLE_DESC = 100
+    MAX_TITLE = 255
+
+    uo = URLopener()
     file = uo.open(url)
     soup = BeautifulSoup.BeautifulSoup(file.read())
     file.close()
@@ -266,7 +288,7 @@ def getImage(url):
         outImage.url = urllib.basejoin(url, link)
         caption = soup.find("div", { "id" : "caption" })
         captionTxt = caption.string
-        #Kuressaare linnus, vaade p�hjast (SM F 3761:473 F); Saaremaa Muuseum; Faili nimi:smf_3761_473.jpg
+        #Kuressaare linnus, vaade põhjast (SM F 3761:473 F); Saaremaa Muuseum; Faili nimi:smf_3761_473.jpg
         (capPart1, museumName, capPart3) = captionTxt.split(';')
         museumName = museumName.strip()
         matchItemRef = re.search("^(.+)\((.+?)\)$", capPart1)
@@ -285,8 +307,15 @@ def getImage(url):
         outDesc += getWikiTable(mainTable, outImage)
         outDesc += u"</table>\n"
 
-        outImage.name = matchItemRef.group(1).strip() + u', ' + outImage.accession_number + u'.jpg'
+        titleStart = matchItemRef.group(1).strip()
+        if ( len(titleStart) > MAX_TITLE_DESC ):
+            #shorten title beginning
+            titleStart = titleStart[:MAX_TITLE_DESC]
+        outImage.name = titleStart + u', ' + outImage.accession_number + u'.jpg'
         outImage.name = cleanUpTitle( outImage.name )
+        if ( len(outImage.name) > MAX_TITLE ):
+            #shorten title
+            outImage.name = outImage.name[:MAX_TITLE]
         
         outImage.description = '{{et|1=' + outDesc + '}}'
         outImage.license = '{{PD-old}}'
@@ -331,7 +360,7 @@ def main():
 
     uploadSite = pywikibot.getSite('commons', 'commons')
 
-   
+    # print muisUrls
     uploadedFiles = []
     for muisUrl in muisUrls:
         answer = pywikibot.inputChoice(u'Include image %s?'
